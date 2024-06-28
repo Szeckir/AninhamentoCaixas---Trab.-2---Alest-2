@@ -14,13 +14,15 @@ public class Box {
 
     @Override
     public String toString() {
-        //return "dimensoes=" + Arrays.toString(dimensoes);
+        //return Arrays.toString(dimensoes);
         return id + " ";
     }
 
     public int[] getDimensoes() {
         return dimensoes;
     }
+
+    
 
     public int getId() {
         return id;

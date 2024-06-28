@@ -1,10 +1,10 @@
 package src.code;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,18 +21,6 @@ public class Graph {
         grafo = new HashMap<>();
         arestas = new ArrayList<>();
     }
-
-    public void getAdjacentes() {
-        for (Box box : grafo.keySet()) {
-            int contador = 0;
-            System.out.println("Caixa cabe em: " + box.getId());
-            for (Box adj : grafo.get(box)) {
-                contador++;
-            }
-            System.out.println(contador + " caixas");
-        }
-    }
-
 
     public Graph(String filename) {
         this();
@@ -71,9 +59,9 @@ public class Graph {
 
     public void imprimirGrafo() {
         for (Box box : grafo.keySet()) {
-            System.out.print(box.getId() + " -> ");
+            System.out.print(box + " -> ");
             for (Box adj : grafo.get(box)) {
-                System.out.print(adj.getId() + " ");
+                System.out.print(adj);
             }
             System.out.println();
         }
@@ -86,35 +74,61 @@ public class Graph {
     public Iterable<Box> getAdj(Box v) {
         return grafo.get(v);
     }
-
-    public void procuraMaiorSequenciaDeCaixas(Graph g) {
-        int maiorSequencia = 0;
-        List<Box> sequencia = new ArrayList<>();
-        
-        for (Box v : g.getVerts()) {
-            int sequenciaAtual = 0;
-            List<Box> sequenciaAtualList = new ArrayList<>();
-            sequenciaAtualList.add(v);
-            
-
-            for (Box w : g.getAdj(v)) {
-                sequenciaAtual++;
-                sequenciaAtualList.add(w);
-                for (Box x : g.getAdj(w)) {
-                    sequenciaAtual++;
-                    sequenciaAtualList.add(x);
-                }
-                if (sequenciaAtual > maiorSequencia) {
-                    maiorSequencia = sequenciaAtual;
-                    sequencia = sequenciaAtualList;
-                }
-                sequenciaAtual = 0;
-                sequenciaAtualList = new ArrayList<>();
-                sequenciaAtualList.add(v);
+    
+    public Box pegarCaixaComMaisAdjacentes() {
+        caixasMesmoTamanho.clear();
+        Box caixa = null;
+        int numAdj = 0;
+        for (Box box : grafo.keySet()) {
+            if (grafo.get(box).size() > numAdj) {
+                numAdj = grafo.get(box).size();
+                caixasMesmoTamanho.clear();
+                caixa = box;
+            }
+            if(numAdj == grafo.get(box).size()) {
+                caixasMesmoTamanho.add(box);
             }
         }
-        System.out.println("Maior sequência de caixas: " + maiorSequencia);
-        System.out.println("Sequência de caixas: " + sequencia);
+        System.out.println("Caixa com mais adjacentes: " + caixa + " com " + numAdj + " adjacentes");
+        return caixa;
+    }
+
+    public static List<Box> maiorSequenciaDeCaixas(Graph graph) {
+        Map<Box, List<Box>> maiorResultado = new HashMap<>();
+        List<Box> maiorCaminho = new ArrayList<>();
+    
+        for (Box caixa : graph.getVerts()) {
+            List<Box> sequencAtual = dfs(caixa, graph, maiorResultado);
+            if (sequencAtual.size() > maiorCaminho.size()) {
+                maiorCaminho = sequencAtual;
+            }
+        }
+    
+        System.out.println("Maior Caminho: " + maiorCaminho.size());
+        return maiorCaminho;
+    }
+    
+    private static List<Box> dfs(Box caixa, Graph graph, Map<Box, List<Box>> maiorResultado) {
+        
+        if (maiorResultado.containsKey(caixa)) {
+            return maiorResultado.get(caixa);
+        }
+    
+        List<Box> maiorSequencia = new ArrayList<>();
+        for (Box adj : graph.getAdj(caixa)) {
+            List<Box> sequencAtual = dfs(adj, graph, maiorResultado);
+            if (sequencAtual.size() > maiorSequencia.size()) {
+                maiorSequencia = sequencAtual;
+            }
+        }
+    
+        List<Box> resultado = new ArrayList<>();
+        resultado.add(caixa);
+        resultado.addAll(maiorSequencia);
+    
+        maiorResultado.put(caixa, resultado);
+    
+        return resultado;
     }
 
     public String toDot() {
